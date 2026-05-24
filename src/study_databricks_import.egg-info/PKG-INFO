@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: study-databricks-import
+Version: 0.1.0
+Summary: Study repository for Databricks Free Edition SQL Warehouse connectivity.
+Requires-Python: >=3.10
+Requires-Dist: databricks-sql-connector>=4.0

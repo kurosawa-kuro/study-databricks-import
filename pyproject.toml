@@ -1,0 +1,21 @@
+[project]
+name = "study-databricks-import"
+version = "0.1.0"
+description = "Study repository for Databricks Free Edition SQL Warehouse connectivity."
+requires-python = ">=3.10"
+dependencies = [
+  "databricks-sql-connector>=4.0",
+]
+
+[project.scripts]
+databricks-sql-test = "study_databricks_import.sql_connectivity:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
