@@ -78,7 +78,9 @@ study-databricks-import/
       03_ctas.sql
       04_values_seed.sql
       05_create_managed_volume.sql
-      06_verify_events_from_volume.sql
+      06_load_events_from_volume.sql
+      07_verify_events_from_volume.sql
+      08_drop_volume_artifacts.sql
   docs/
     01_goal.md
     02_managed_volume_validation.md
@@ -245,6 +247,7 @@ doppler run -- make volume-create
 doppler run -- make volume-upload \
   LOCAL_FILE=./data/events.json \
   VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json
+doppler run -- make volume-load
 ```
 
 Notebook 実行後の確認と片付け:
@@ -260,8 +263,9 @@ doppler run -- make volume-clean
 - `volume-upload` は `DWH_DATABRICKS_TOKEN` をそのまま使える
 - `DWH_DATABRICKS_FILES_TOKEN` を別で持たせたい場合は上書きもできる
 - `Managed Volume -> Spark -> Delta` の検証用 notebook は `databricks/notebooks/01_volume_json_to_delta.py`
-- `volume-verify` は `databricks/sql/06_verify_events_from_volume.sql` を実行する
-- `volume-clean` は `databricks/sql/07_drop_volume_artifacts.sql` を実行する
+- `volume-load` は `databricks/sql/06_load_events_from_volume.sql` を実行する
+- `volume-verify` は `databricks/sql/07_verify_events_from_volume.sql` を実行する
+- `volume-clean` は `databricks/sql/08_drop_volume_artifacts.sql` を実行する
 - ここはまだ Free Edition 実測前提では固定しない
 
 catalog 確認:

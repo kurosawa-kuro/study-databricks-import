@@ -67,6 +67,12 @@ doppler run -- make volume-upload \
   VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json
 ```
 
+## SQL だけで Delta Table 化する最小例
+
+```bash
+doppler run -- make volume-load
+```
+
 ## notebook / serverless compute での最小読込例
 
 ```python
@@ -79,7 +85,7 @@ df = (
 display(df)
 ```
 
-実ファイル:
+補助 notebook:
 
 - `databricks/notebooks/01_volume_json_to_delta.py`
 
@@ -92,8 +98,9 @@ display(spark.sql("SELECT * FROM workspace.default.events_from_volume"))
 
 確認用 SQL:
 
-- `databricks/sql/06_verify_events_from_volume.sql`
-- `databricks/sql/07_drop_volume_artifacts.sql`
+- `databricks/sql/06_load_events_from_volume.sql`
+- `databricks/sql/07_verify_events_from_volume.sql`
+- `databricks/sql/08_drop_volume_artifacts.sql`
 
 ## 判定基準
 
@@ -105,6 +112,7 @@ display(spark.sql("SELECT * FROM workspace.default.events_from_volume"))
 
 1. `doppler run -- make volume-create`
 2. `doppler run -- make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json`
-3. Databricks Free Edition の notebook / serverless compute で `databricks/notebooks/01_volume_json_to_delta.py` を実行する
+3. `doppler run -- make volume-load` で `workspace.default.events_from_volume` を作る
 4. `doppler run -- make volume-verify` で `workspace.default.events_from_volume` を確認する
-5. 検証をやり直すときは `doppler run -- make volume-clean` で後片付けする
+5. SQL だけで不足する場合は `databricks/notebooks/01_volume_json_to_delta.py` を補助的に使う
+6. 検証をやり直すときは `doppler run -- make volume-clean` で後片付けする

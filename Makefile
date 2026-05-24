@@ -1,4 +1,4 @@
-.PHONY: help venv install sql-test sql-catalog sql-ctas sql-values volume-create volume-upload volume-verify volume-clean sql-query
+.PHONY: help venv install sql-test sql-catalog sql-ctas sql-values volume-create volume-load volume-upload volume-verify volume-clean pipeline-create pipeline-verify sql-query
 
 VENV_DIR := .venv
 PYTHON := python3
@@ -19,8 +19,11 @@ help:
 	@echo "  make sql-ctas     - run minimal CTAS test"
 	@echo "  make sql-values   - create customers/orders from SQL VALUES"
 	@echo "  make volume-create - create managed volume candidate for Free Edition validation"
+	@echo "  make volume-load   - create events_from_volume from uploaded JSON via SQL"
 	@echo "  make volume-verify - verify events_from_volume after notebook execution"
 	@echo "  make volume-clean  - drop managed volume validation artifacts"
+	@echo "  make pipeline-create - create standalone pipeline materialized view from volume"
+	@echo "  make pipeline-verify - verify standalone pipeline materialized view"
 	@echo '  make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json'
 	@echo '  make sql-query QUERY="SELECT 42 AS answer" - run arbitrary SQL'
 
@@ -70,6 +73,14 @@ volume-create:
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
 	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/05_create_managed_volume.sql
 
+volume-load:
+	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
+	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
+	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
+	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
+	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/06_load_events_from_volume.sql
+
 volume-upload:
 	@test -n "$(LOCAL_FILE)" || (echo 'Usage: make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json' && exit 2)
 	@test -n "$(VOLUME_PATH)" || (echo 'Usage: make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json' && exit 2)
@@ -84,7 +95,7 @@ volume-verify:
 	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/06_verify_events_from_volume.sql
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/07_verify_events_from_volume.sql
 
 volume-clean:
 	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
@@ -92,7 +103,23 @@ volume-clean:
 	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/07_drop_volume_artifacts.sql
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/08_drop_volume_artifacts.sql
+
+pipeline-create:
+	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
+	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
+	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
+	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
+	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/09_create_events_pipeline_mv.sql
+
+pipeline-verify:
+	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
+	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
+	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
+	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
+	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/10_verify_events_pipeline_mv.sql
 
 sql-query:
 	@test -n "$(QUERY)" || (echo 'Usage: make sql-query QUERY="SELECT 42 AS answer"' && exit 2)

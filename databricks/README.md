@@ -55,7 +55,8 @@ doppler run -- make sql-values
 - [03_ctas.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/03_ctas.sql)
 - [04_values_seed.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/04_values_seed.sql)
 - [05_create_managed_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/05_create_managed_volume.sql)
-- [06_verify_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/06_verify_events_from_volume.sql)
+- [06_load_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/06_load_events_from_volume.sql)
+- [07_verify_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/07_verify_events_from_volume.sql)
 - [01_volume_json_to_delta.py](/home/ubuntu/repos/study-databricks-import/databricks/notebooks/01_volume_json_to_delta.py)
 
 ## 次段階の未検証候補
@@ -73,10 +74,11 @@ doppler run -- make volume-create
 doppler run -- make volume-upload \
   LOCAL_FILE=./data/events.json \
   VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json
+doppler run -- make volume-load
 doppler run -- make volume-verify
 doppler run -- make volume-clean
 ```
 
-Volume 作成と upload が通ったら、`01_volume_json_to_delta.py` を Databricks Workspace に取り込んで実行し、最後に `06_verify_events_from_volume.sql` で確認する。
+まずは `volume-load` を優先する。もし SQL だけで不足する場合のみ、`01_volume_json_to_delta.py` を Databricks Workspace に取り込んで補助的に使う。
 
 詳細は [docs/02_managed_volume_validation.md](/home/ubuntu/repos/study-databricks-import/docs/02_managed_volume_validation.md) を参照。
