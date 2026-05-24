@@ -1,4 +1,4 @@
-.PHONY: help venv install sql-test sql-catalog sql-ctas sql-query
+.PHONY: help venv install sql-test sql-catalog sql-ctas sql-values sql-query
 
 VENV_DIR := .venv
 PYTHON := python3
@@ -16,6 +16,7 @@ help:
 	@echo "  make sql-test     - run SELECT 1 against Databricks SQL Warehouse"
 	@echo "  make sql-catalog  - run current_catalog()"
 	@echo "  make sql-ctas     - run minimal CTAS test"
+	@echo "  make sql-values   - create customers/orders from SQL VALUES"
 	@echo '  make sql-query QUERY="SELECT 42 AS answer" - run arbitrary SQL'
 
 venv:
@@ -47,6 +48,14 @@ sql-ctas:
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
 	./scripts/databricks_sql_test.sh --mode ctas
+
+sql-values:
+	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
+	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
+	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
+	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
+	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
+	./scripts/databricks_sql_test.sh --mode values
 
 sql-query:
 	@test -n "$(QUERY)" || (echo 'Usage: make sql-query QUERY="SELECT 42 AS answer"' && exit 2)

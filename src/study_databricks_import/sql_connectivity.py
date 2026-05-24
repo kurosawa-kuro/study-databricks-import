@@ -14,6 +14,54 @@ DEFAULT_CTAS_STATEMENTS = [
     "CREATE OR REPLACE TABLE workspace.default.free_edition_sql_test AS SELECT 1 AS ok",
     "SELECT * FROM workspace.default.free_edition_sql_test",
 ]
+DEFAULT_VALUES_STATEMENTS = [
+    "CREATE SCHEMA IF NOT EXISTS workspace.default",
+    """
+    CREATE OR REPLACE TABLE workspace.default.customers (
+      customer_id INT,
+      name STRING,
+      age INT,
+      prefecture STRING,
+      signup_date DATE
+    )
+    """,
+    """
+    INSERT OVERWRITE workspace.default.customers
+    VALUES
+      (1, 'Taro Yamada', 34, 'Tokyo', DATE '2024-01-10'),
+      (2, 'Hanako Sato', 28, 'Osaka', DATE '2024-02-15'),
+      (3, 'Ken Suzuki', 41, 'Hokkaido', DATE '2024-03-20')
+    """,
+    """
+    CREATE OR REPLACE TABLE workspace.default.orders (
+      order_id INT,
+      customer_id INT,
+      amount INT,
+      ordered_at TIMESTAMP
+    )
+    """,
+    """
+    INSERT OVERWRITE workspace.default.orders
+    VALUES
+      (101, 1, 12000, TIMESTAMP '2024-04-01 10:30:00'),
+      (102, 1, 8000, TIMESTAMP '2024-04-03 14:20:00'),
+      (103, 2, 15000, TIMESTAMP '2024-04-05 09:10:00'),
+      (104, 3, 6000, TIMESTAMP '2024-04-07 18:45:00')
+    """,
+    """
+    SELECT
+      c.customer_id,
+      c.name,
+      c.prefecture,
+      COUNT(o.order_id) AS order_count,
+      COALESCE(SUM(o.amount), 0) AS total_amount
+    FROM workspace.default.customers c
+    LEFT JOIN workspace.default.orders o
+      ON c.customer_id = o.customer_id
+    GROUP BY c.customer_id, c.name, c.prefecture
+    ORDER BY total_amount DESC
+    """,
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=["query", "catalog", "ctas"],
+        choices=["query", "catalog", "ctas", "values"],
         default="query",
         help="Predefined SQL flow to run.",
     )
@@ -84,6 +132,23 @@ def main() -> None:
                 print("Statements:")
                 for statement in DEFAULT_CTAS_STATEMENTS:
                     print(f"- {statement}")
+                print(f"Rows: {last_rows}")
+                return
+
+            if args.mode == "values":
+                last_rows = None
+                for statement in DEFAULT_VALUES_STATEMENTS:
+                    cursor.execute(statement)
+                    try:
+                        last_rows = cursor.fetchall()
+                    except Exception:
+                        last_rows = None
+
+                print("Databricks SQL VALUES test succeeded.")
+                print("Statements:")
+                for statement in DEFAULT_VALUES_STATEMENTS:
+                    one_line = " ".join(statement.split())
+                    print(f"- {one_line}")
                 print(f"Rows: {last_rows}")
                 return
 
