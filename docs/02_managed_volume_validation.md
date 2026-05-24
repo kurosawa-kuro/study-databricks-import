@@ -49,19 +49,24 @@ SQL
 
 - `sql` scope token とは別に、`files` scope を持つ token
 - もしくは `sql` と `files` の両方を持つ scoped PAT
+- Doppler secret `DWH_DATABRICKS_FILES_TOKEN`
 
 ## 最小 SQL
 
 - `databricks/sql/05_create_managed_volume.sql`
 
+最小実行コマンド:
+
+```bash
+doppler run -- make volume-create
+```
+
 ## 最小 Files API 例
 
 ```bash
-curl --request PUT \
-  "https://${DATABRICKS_SERVER_HOSTNAME}/api/2.0/fs/files/Volumes/workspace/default/raw_logs/sample.json?overwrite=true" \
-  --header "Authorization: Bearer ${DATABRICKS_FILES_TOKEN}" \
-  --header "Content-Type: application/octet-stream" \
-  --data-binary @./data/events.json
+doppler run -- make volume-upload \
+  LOCAL_FILE=./data/events.json \
+  VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json
 ```
 
 ## notebook / serverless compute での最小読込例
@@ -76,6 +81,10 @@ df = (
 display(df)
 ```
 
+実ファイル:
+
+- `databricks/notebooks/01_volume_json_to_delta.py`
+
 ## Delta Table 化の最小例
 
 ```python
@@ -83,9 +92,20 @@ df.write.mode("overwrite").saveAsTable("workspace.default.events_from_volume")
 display(spark.sql("SELECT * FROM workspace.default.events_from_volume"))
 ```
 
+確認用 SQL:
+
+- `databricks/sql/06_verify_events_from_volume.sql`
+
 ## 判定基準
 
 - `CREATE VOLUME workspace.default.raw_logs` が通る
 - Files API upload が 204 を返す
 - notebook / serverless compute で volume 上のファイルを読める
 - `events_from_volume` を Delta Table として保存できる
+
+## 今の repo での実行順
+
+1. `doppler run -- make volume-create`
+2. `doppler run -- make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json`
+3. Databricks Free Edition の notebook / serverless compute で `databricks/notebooks/01_volume_json_to_delta.py` を実行する
+4. `databricks/sql/06_verify_events_from_volume.sql` で `workspace.default.events_from_volume` を確認する

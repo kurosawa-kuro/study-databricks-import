@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 
 from databricks import sql
 
@@ -62,6 +63,11 @@ DEFAULT_VALUES_STATEMENTS = [
     ORDER BY total_amount DESC
     """,
 ]
+DEFAULT_VOLUME_STATEMENTS = [
+    "CREATE SCHEMA IF NOT EXISTS workspace.default",
+    "CREATE VOLUME IF NOT EXISTS workspace.default.raw_logs",
+    "SHOW VOLUMES IN workspace.default",
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -75,9 +81,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=["query", "catalog", "ctas", "values"],
+        choices=["query", "catalog", "ctas", "values", "volume"],
         default="query",
         help="Predefined SQL flow to run.",
+    )
+    parser.add_argument(
+        "--sql-file",
+        help="Path to a .sql file. Statements are split on semicolons.",
     )
     return parser.parse_args()
 
@@ -88,6 +98,22 @@ def require_env(name: str) -> str:
         print(f"Missing required environment variable: {name}", file=sys.stderr)
         raise SystemExit(2)
     return value
+
+
+def load_statements(sql_file: str) -> list[str]:
+    content = Path(sql_file).read_text(encoding="utf-8")
+    return [statement.strip() for statement in content.split(";") if statement.strip()]
+
+
+def run_statements(cursor: sql.client.Cursor, statements: list[str]) -> list[object] | None:
+    last_rows = None
+    for statement in statements:
+        cursor.execute(statement)
+        try:
+            last_rows = cursor.fetchall()
+        except Exception:
+            last_rows = None
+    return last_rows
 
 
 def main() -> None:
@@ -103,6 +129,17 @@ def main() -> None:
         access_token=access_token,
     ) as connection:
         with connection.cursor() as cursor:
+            if args.sql_file:
+                statements = load_statements(args.sql_file)
+                last_rows = run_statements(cursor, statements)
+                print("Databricks SQL file execution succeeded.")
+                print(f"SQL file: {args.sql_file}")
+                print("Statements:")
+                for statement in statements:
+                    print(f"- {' '.join(statement.split())}")
+                print(f"Rows: {last_rows}")
+                return
+
             if args.mode == "query":
                 cursor.execute(args.query)
                 rows = cursor.fetchall()
@@ -120,14 +157,7 @@ def main() -> None:
                 return
 
             if args.mode == "ctas":
-                last_rows = None
-                for statement in DEFAULT_CTAS_STATEMENTS:
-                    cursor.execute(statement)
-                    try:
-                        last_rows = cursor.fetchall()
-                    except Exception:
-                        last_rows = None
-
+                last_rows = run_statements(cursor, DEFAULT_CTAS_STATEMENTS)
                 print("Databricks SQL CTAS test succeeded.")
                 print("Statements:")
                 for statement in DEFAULT_CTAS_STATEMENTS:
@@ -136,19 +166,21 @@ def main() -> None:
                 return
 
             if args.mode == "values":
-                last_rows = None
-                for statement in DEFAULT_VALUES_STATEMENTS:
-                    cursor.execute(statement)
-                    try:
-                        last_rows = cursor.fetchall()
-                    except Exception:
-                        last_rows = None
-
+                last_rows = run_statements(cursor, DEFAULT_VALUES_STATEMENTS)
                 print("Databricks SQL VALUES test succeeded.")
                 print("Statements:")
                 for statement in DEFAULT_VALUES_STATEMENTS:
                     one_line = " ".join(statement.split())
                     print(f"- {one_line}")
+                print(f"Rows: {last_rows}")
+                return
+
+            if args.mode == "volume":
+                last_rows = run_statements(cursor, DEFAULT_VOLUME_STATEMENTS)
+                print("Databricks SQL managed volume test succeeded.")
+                print("Statements:")
+                for statement in DEFAULT_VOLUME_STATEMENTS:
+                    print(f"- {statement}")
                 print(f"Rows: {last_rows}")
                 return
 
