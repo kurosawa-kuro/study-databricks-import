@@ -49,3 +49,15 @@ doppler run -- make sql-values
 - [02_catalog.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/02_catalog.sql)
 - [03_ctas.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/03_ctas.sql)
 - [04_values_seed.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/04_values_seed.sql)
+- [05_create_managed_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/05_create_managed_volume.sql)
+
+## 次段階の未検証候補
+
+Free Edition での次段階候補として、以下を残す。
+
+- Managed Volume 作成
+- Files API で `/Volumes/...` へ upload
+- notebook / serverless compute で volume を読む
+- Delta Table 化
+
+詳細は [docs/02_managed_volume_validation.md](/home/ubuntu/repos/study-databricks-import/docs/02_managed_volume_validation.md) を参照。

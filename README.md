@@ -71,6 +71,7 @@ study-databricks-import/
       04_values_seed.sql
   docs/
     01_goal.md
+    02_managed_volume_validation.md
   scripts/
     databricks_sql_test.sh
   src/
@@ -244,6 +245,36 @@ VALUES 再現:
 
 これらは Free Edition では前提が不安定なので、このリポジトリの主導線にしない。
 
+## 5.1 採用候補だが未検証の代替案
+
+Databricks Free Edition で GCS を直接 External Location / External Volume にする検証は、初期スコープ外とする。
+
+ただし、GCS 上のログを Databricks で扱う検証候補は残す。
+
+候補フロー:
+
+```text
+external batch
+  ↓
+GCS からログ取得
+  ↓
+Files API / CLI
+  ↓
+Managed Volume
+  ↓
+notebook / serverless compute
+  ↓
+Spark DataFrame
+  ↓
+Delta Table
+  ↓
+SQL
+```
+
+この案は **採用候補だが未検証** であり、Free Edition での次段階検証として扱う。
+
+検証手順は [docs/02_managed_volume_validation.md](/home/ubuntu/repos/study-databricks-import/docs/02_managed_volume_validation.md) を参照。
+
 ## 6. 仕様固定メモ
 
 Databricks 部分の仕様は、現時点では以下で固定する。
@@ -255,3 +286,4 @@ Databricks 部分の仕様は、現時点では以下で固定する。
 - `data/` は参照用 fixture として保持する
 - `customers` / `orders` は SQL の `VALUES` で再現する
 - notebook / Databricks Connect / GCS volume は主導線にしない
+- Managed Volume + Files API は採用候補だが未検証
