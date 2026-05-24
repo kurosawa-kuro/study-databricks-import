@@ -1,20 +1,17 @@
 # Databricks README
 
-## 最重要
+## 位置づけ
 
-このリポジトリの Databricks 学習は、**Databricks Free Edition だけ**を対象にする。
-
-主導線は `SQL Warehouse` に対するローカル疎通確認であり、`Databricks Connect` や notebook は主導線にしない。
+Databricks 配下のファイル一覧と、主導線で使う SQL / notebook の置き場をまとめる。
 
 ## 主導線
 
-1. Free Edition にログインする
-2. `SQL Warehouses` の `Connection details` を確認する
-3. `sql` scope の PAT を作る
-4. `sql, files` scope を持つ `DWH_DATABRICKS_TOKEN` を Doppler で管理する
-5. `doppler run -- make sql-test` を実行する
-6. `doppler run -- make sql-catalog` と `doppler run -- make sql-ctas` を実行する
-7. `doppler run -- make sql-values` を実行する
+1. `sql-test`
+2. `sql-catalog`
+3. `volume-create`
+4. `volume-upload`
+5. `pipeline-create`
+6. `pipeline-verify`
 
 ## コマンド
 
@@ -25,29 +22,6 @@ doppler run -- make sql-ctas
 doppler run -- make sql-values
 ```
 
-## 確認済み実績
-
-以下は実行成功を確認済み。
-
-- `doppler run -- make sql-test`
-- `doppler run -- make sql-catalog`
-- `doppler run -- make sql-ctas`
-- `doppler run -- make sql-values`
-- `doppler run -- make volume-create`
-
-確認済み結果:
-
-- `SELECT 1 AS ok`
-- `current_catalog() = workspace`
-- `workspace.default.free_edition_sql_test` の CTAS 成功
-- `SELECT * FROM workspace.default.free_edition_sql_test` で `Row(ok=1)` を確認
-- `customers` / `orders` は SQL の `VALUES` で再現する仕様
-- `workspace.default.customers` と `workspace.default.orders` の作成を確認
-- JOIN 集計結果として `Taro Yamada / 2件 / 20000`、`Hanako Sato / 1件 / 15000`、`Ken Suzuki / 1件 / 6000` を確認
-- `workspace.default.raw_logs` の Managed Volume 作成を確認
-
-このため、この README の主導線は **確認済み仕様** として扱う。
-
 ## SQL の中身
 
 - [01_connectivity.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/01_connectivity.sql)
@@ -57,28 +31,28 @@ doppler run -- make sql-values
 - [05_create_managed_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/05_create_managed_volume.sql)
 - [06_load_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/06_load_events_from_volume.sql)
 - [07_verify_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/07_verify_events_from_volume.sql)
+- [08_drop_volume_artifacts.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/08_drop_volume_artifacts.sql)
+- [09_create_events_pipeline_mv.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/09_create_events_pipeline_mv.sql)
+- [10_verify_events_pipeline_mv.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/10_verify_events_pipeline_mv.sql)
 - [01_volume_json_to_delta.py](/home/ubuntu/repos/study-databricks-import/databricks/notebooks/01_volume_json_to_delta.py)
 
-## 次段階の未検証候補
-
-Free Edition での次段階候補として、以下を残す。
-
-- Files API で `/Volumes/...` へ upload
-- notebook / serverless compute で volume を読む
-- Delta Table 化
-
-最小実行コマンド:
+## 主なコマンド
 
 ```bash
+doppler run -- make sql-test
+doppler run -- make sql-catalog
 doppler run -- make volume-create
 doppler run -- make volume-upload \
   LOCAL_FILE=./data/events.json \
   VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json
-doppler run -- make volume-load
+doppler run -- make pipeline-create
+doppler run -- make pipeline-verify
 doppler run -- make volume-verify
 doppler run -- make volume-clean
 ```
 
-まずは `volume-load` を優先する。もし SQL だけで不足する場合のみ、`01_volume_json_to_delta.py` を Databricks Workspace に取り込んで補助的に使う。
+詳細:
 
-詳細は [docs/02_managed_volume_validation.md](/home/ubuntu/repos/study-databricks-import/docs/02_managed_volume_validation.md) を参照。
+- 確定スコープ: [docs/01_confirmed_scope.md](/home/ubuntu/repos/study-databricks-import/docs/01_confirmed_scope.md)
+- 検証記録: [docs/02_pipeline_validation.md](/home/ubuntu/repos/study-databricks-import/docs/02_pipeline_validation.md)
+- 技術的債務: [docs/03_technical_debt.md](/home/ubuntu/repos/study-databricks-import/docs/03_technical_debt.md)
