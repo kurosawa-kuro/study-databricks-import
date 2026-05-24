@@ -29,18 +29,7 @@ doppler run -- make volume-upload \
 
 - `Upload succeeded: ./data/events.json -> /Volumes/workspace/default/raw_logs/sample.json`
 
-### 3. SQL load
-
-```bash
-doppler run -- make volume-load
-```
-
-確認結果:
-
-- `CREATE OR REPLACE TABLE workspace.default.events_from_volume AS SELECT * FROM read_files(...)`
-- 3 rows loaded
-
-### 4. Standalone pipeline
+### 3. Standalone pipeline
 
 ```bash
 doppler run -- make pipeline-create
@@ -53,15 +42,9 @@ doppler run -- make pipeline-verify
 - `SELECT COUNT(*) AS row_count FROM workspace.default.events_from_volume_mv`
 - `row_count = 3`
 
-## 補助経路
-
-必要なら [databricks/notebooks/01_volume_json_to_delta.py](/home/ubuntu/repos/study-databricks-import/databricks/notebooks/01_volume_json_to_delta.py) を使えるが、主導線ではない。
-
 ## 関連 SQL
 
-- [05_create_managed_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/05_create_managed_volume.sql)
-- [06_load_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/06_load_events_from_volume.sql)
-- [07_verify_events_from_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/07_verify_events_from_volume.sql)
-- [08_drop_volume_artifacts.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/08_drop_volume_artifacts.sql)
-- [09_create_events_pipeline_mv.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/09_create_events_pipeline_mv.sql)
-- [10_verify_events_pipeline_mv.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/10_verify_events_pipeline_mv.sql)
+- [01_create_managed_volume.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/volume/01_create_managed_volume.sql)
+- [02_drop_volume_artifacts.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/volume/02_drop_volume_artifacts.sql)
+- [01_create_events_pipeline_mv.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/pipeline/01_create_events_pipeline_mv.sql)
+- [02_verify_events_pipeline_mv.sql](/home/ubuntu/repos/study-databricks-import/databricks/sql/pipeline/02_verify_events_pipeline_mv.sql)

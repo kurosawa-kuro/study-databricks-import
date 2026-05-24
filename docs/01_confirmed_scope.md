@@ -29,12 +29,9 @@
 
 - `doppler run -- make sql-test`
 - `doppler run -- make sql-catalog`
-- `doppler run -- make sql-ctas`
 - `doppler run -- make sql-values`
 - `doppler run -- make volume-create`
 - `doppler run -- make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json`
-- `doppler run -- make volume-load`
-- `doppler run -- make volume-verify`
 - `doppler run -- make pipeline-create`
 - `doppler run -- make pipeline-verify`
 
@@ -44,6 +41,5 @@
 - `workspace.default.customers`
 - `workspace.default.orders`
 - `workspace.default.raw_logs`
-- `workspace.default.events_from_volume`
 - `workspace.default.events_from_volume_mv`
 - `row_count = 3`

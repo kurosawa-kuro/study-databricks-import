@@ -11,8 +11,6 @@
 
 ## repo 内の債務
 
-- `volume-load` と `pipeline-create` が近い責務を持っているので、将来的に役割を再整理したい
-- `databricks/notebooks/01_volume_json_to_delta.py` は補助用だが残っている
 - SQL ファイルが増えてきたので、`foundation / volume / pipeline` などに再編余地がある
 - 実行結果サマリを自動保存する仕組みはまだない
 

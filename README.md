@@ -31,12 +31,9 @@ Databricks Free Edition だけを使って、`SQL Warehouse` と `Managed Volume
 
 - `doppler run -- make sql-test`
 - `doppler run -- make sql-catalog`
-- `doppler run -- make sql-ctas`
 - `doppler run -- make sql-values`
 - `doppler run -- make volume-create`
 - `doppler run -- make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json`
-- `doppler run -- make volume-load`
-- `doppler run -- make volume-verify`
 - `doppler run -- make pipeline-create`
 - `doppler run -- make pipeline-verify`
 
@@ -47,7 +44,6 @@ Databricks Free Edition だけを使って、`SQL Warehouse` と `Managed Volume
 - `workspace.default.raw_logs` の Managed Volume を作れる
 - `./data/events.json` を `/Volumes/workspace/default/raw_logs/sample.json` に upload できる
 - `read_files('/Volumes/workspace/default/raw_logs/sample.json', format => 'json', multiLine => true)` が通る
-- `workspace.default.events_from_volume` を SQL で作れる
 - `workspace.default.events_from_volume_mv` を **materialized view backed pipeline** として作れる
 - `workspace.default.events_from_volume_mv` で `row_count = 3` を確認できる
 
@@ -88,13 +84,6 @@ doppler run -- make pipeline-create
 doppler run -- make pipeline-verify
 ```
 
-必要なら中間確認:
-
-```bash
-doppler run -- make volume-load
-doppler run -- make volume-verify
-```
-
 後片付け:
 
 ```bash
@@ -107,7 +96,6 @@ doppler run -- make volume-clean
 study-databricks-import/
   data/
   databricks/
-    notebooks/
     sql/
   docs/
   scripts/

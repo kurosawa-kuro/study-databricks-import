@@ -1,2 +1,0 @@
-[console_scripts]
-databricks-sql-test = study_databricks_import.sql_connectivity:main

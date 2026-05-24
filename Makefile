@@ -1,4 +1,4 @@
-.PHONY: help venv install sql-test sql-catalog sql-ctas sql-values volume-create volume-load volume-upload volume-verify volume-clean pipeline-create pipeline-verify sql-query
+.PHONY: help venv install sql-test sql-catalog sql-values volume-create volume-upload volume-clean pipeline-create pipeline-verify sql-query
 
 VENV_DIR := .venv
 PYTHON := python3
@@ -16,12 +16,9 @@ help:
 	@echo "  make install      - install project dependencies"
 	@echo "  make sql-test     - run SELECT 1 against Databricks SQL Warehouse"
 	@echo "  make sql-catalog  - run current_catalog()"
-	@echo "  make sql-ctas     - run minimal CTAS test"
 	@echo "  make sql-values   - create customers/orders from SQL VALUES"
-	@echo "  make volume-create - create managed volume candidate for Free Edition validation"
-	@echo "  make volume-load   - create events_from_volume from uploaded JSON via SQL"
-	@echo "  make volume-verify - verify events_from_volume after notebook execution"
-	@echo "  make volume-clean  - drop managed volume validation artifacts"
+	@echo "  make volume-create - create managed volume for pipeline input"
+	@echo "  make volume-clean  - drop standalone pipeline and managed volume artifacts"
 	@echo "  make pipeline-create - create standalone pipeline materialized view from volume"
 	@echo "  make pipeline-verify - verify standalone pipeline materialized view"
 	@echo '  make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json'
@@ -49,14 +46,6 @@ sql-catalog:
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
 	./scripts/databricks_sql_test.sh --mode catalog
 
-sql-ctas:
-	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
-	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
-	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
-	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
-	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --mode ctas
-
 sql-values:
 	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
 	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
@@ -71,15 +60,7 @@ volume-create:
 	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/05_create_managed_volume.sql
-
-volume-load:
-	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
-	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
-	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
-	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
-	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/06_load_events_from_volume.sql
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/volume/01_create_managed_volume.sql
 
 volume-upload:
 	@test -n "$(LOCAL_FILE)" || (echo 'Usage: make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json' && exit 2)
@@ -89,21 +70,13 @@ volume-upload:
 	DATABRICKS_FILES_TOKEN="$(DATABRICKS_FILES_TOKEN)" \
 	./scripts/databricks_volume_upload.sh "$(LOCAL_FILE)" "$(VOLUME_PATH)"
 
-volume-verify:
-	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
-	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
-	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
-	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
-	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/07_verify_events_from_volume.sql
-
 volume-clean:
 	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
 	@test -n "$(DATABRICKS_TOKEN)" || (echo "Missing DWH_DATABRICKS_TOKEN or DATABRICKS_TOKEN" && exit 2)
 	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/08_drop_volume_artifacts.sql
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/volume/02_drop_volume_artifacts.sql
 
 pipeline-create:
 	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
@@ -111,7 +84,7 @@ pipeline-create:
 	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/09_create_events_pipeline_mv.sql
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/pipeline/01_create_events_pipeline_mv.sql
 
 pipeline-verify:
 	@test -x "$(VENV_PYTHON)" || (echo "Missing $(VENV_PYTHON). Run 'make install' first." && exit 2)
@@ -119,7 +92,7 @@ pipeline-verify:
 	DATABRICKS_SERVER_HOSTNAME="$(DATABRICKS_SERVER_HOSTNAME)" \
 	DATABRICKS_HTTP_PATH="$(DATABRICKS_HTTP_PATH)" \
 	DATABRICKS_TOKEN="$(DATABRICKS_TOKEN)" \
-	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/10_verify_events_pipeline_mv.sql
+	./scripts/databricks_sql_test.sh --sql-file ./databricks/sql/pipeline/02_verify_events_pipeline_mv.sql
 
 sql-query:
 	@test -n "$(QUERY)" || (echo 'Usage: make sql-query QUERY="SELECT 42 AS answer"' && exit 2)

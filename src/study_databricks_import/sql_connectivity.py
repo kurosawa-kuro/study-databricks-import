@@ -10,11 +10,6 @@ from databricks import sql
 
 DEFAULT_TEST_QUERY = "SELECT 1 AS ok"
 DEFAULT_CATALOG_QUERY = "SELECT current_catalog() AS current_catalog"
-DEFAULT_CTAS_STATEMENTS = [
-    "CREATE SCHEMA IF NOT EXISTS workspace.default",
-    "CREATE OR REPLACE TABLE workspace.default.free_edition_sql_test AS SELECT 1 AS ok",
-    "SELECT * FROM workspace.default.free_edition_sql_test",
-]
 DEFAULT_VALUES_STATEMENTS = [
     "CREATE SCHEMA IF NOT EXISTS workspace.default",
     """
@@ -63,11 +58,6 @@ DEFAULT_VALUES_STATEMENTS = [
     ORDER BY total_amount DESC
     """,
 ]
-DEFAULT_VOLUME_STATEMENTS = [
-    "CREATE SCHEMA IF NOT EXISTS workspace.default",
-    "CREATE VOLUME IF NOT EXISTS workspace.default.raw_logs",
-    "SHOW VOLUMES IN workspace.default",
-]
 
 
 def parse_args() -> argparse.Namespace:
@@ -81,7 +71,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=["query", "catalog", "ctas", "values", "volume"],
+        choices=["query", "catalog", "values"],
         default="query",
         help="Predefined SQL flow to run.",
     )
@@ -156,15 +146,6 @@ def main() -> None:
                 print(f"Rows: {rows}")
                 return
 
-            if args.mode == "ctas":
-                last_rows = run_statements(cursor, DEFAULT_CTAS_STATEMENTS)
-                print("Databricks SQL CTAS test succeeded.")
-                print("Statements:")
-                for statement in DEFAULT_CTAS_STATEMENTS:
-                    print(f"- {statement}")
-                print(f"Rows: {last_rows}")
-                return
-
             if args.mode == "values":
                 last_rows = run_statements(cursor, DEFAULT_VALUES_STATEMENTS)
                 print("Databricks SQL VALUES test succeeded.")
@@ -172,15 +153,6 @@ def main() -> None:
                 for statement in DEFAULT_VALUES_STATEMENTS:
                     one_line = " ".join(statement.split())
                     print(f"- {one_line}")
-                print(f"Rows: {last_rows}")
-                return
-
-            if args.mode == "volume":
-                last_rows = run_statements(cursor, DEFAULT_VOLUME_STATEMENTS)
-                print("Databricks SQL managed volume test succeeded.")
-                print("Statements:")
-                for statement in DEFAULT_VOLUME_STATEMENTS:
-                    print(f"- {statement}")
                 print(f"Rows: {last_rows}")
                 return
 
