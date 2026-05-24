@@ -13,7 +13,6 @@
 
 一方で、以下は **未検証**。
 
-- Managed Volume 作成
 - Files API で `/Volumes/...` へアップロード
 - notebook / serverless compute から volume 上のファイルを読む
 - Delta Table 化
@@ -40,10 +39,9 @@ SQL
 
 ## 検証順
 
-1. Managed Volume を作れるか
-2. `files` scope token で Files API upload が通るか
-3. notebook / serverless compute から `/Volumes/...` を読めるか
-4. Delta Table 化できるか
+1. `files` scope token で Files API upload が通るか
+2. notebook / serverless compute から `/Volumes/...` を読めるか
+3. Delta Table 化できるか
 
 ## 必要な追加前提
 
@@ -95,10 +93,10 @@ display(spark.sql("SELECT * FROM workspace.default.events_from_volume"))
 確認用 SQL:
 
 - `databricks/sql/06_verify_events_from_volume.sql`
+- `databricks/sql/07_drop_volume_artifacts.sql`
 
 ## 判定基準
 
-- `CREATE VOLUME workspace.default.raw_logs` が通る
 - Files API upload が 204 を返す
 - notebook / serverless compute で volume 上のファイルを読める
 - `events_from_volume` を Delta Table として保存できる
@@ -108,4 +106,5 @@ display(spark.sql("SELECT * FROM workspace.default.events_from_volume"))
 1. `doppler run -- make volume-create`
 2. `doppler run -- make volume-upload LOCAL_FILE=./data/events.json VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json`
 3. Databricks Free Edition の notebook / serverless compute で `databricks/notebooks/01_volume_json_to_delta.py` を実行する
-4. `databricks/sql/06_verify_events_from_volume.sql` で `workspace.default.events_from_volume` を確認する
+4. `doppler run -- make volume-verify` で `workspace.default.events_from_volume` を確認する
+5. 検証をやり直すときは `doppler run -- make volume-clean` で後片付けする

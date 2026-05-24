@@ -11,7 +11,7 @@
 1. Free Edition にログインする
 2. `SQL Warehouses` の `Connection details` を確認する
 3. `sql` scope の PAT を作る
-4. `DWH_DATABRICKS_TOKEN` を Doppler で管理する
+4. `sql, files` scope を持つ `DWH_DATABRICKS_TOKEN` を Doppler で管理する
 5. `doppler run -- make sql-test` を実行する
 6. `doppler run -- make sql-catalog` と `doppler run -- make sql-ctas` を実行する
 7. `doppler run -- make sql-values` を実行する
@@ -33,6 +33,7 @@ doppler run -- make sql-values
 - `doppler run -- make sql-catalog`
 - `doppler run -- make sql-ctas`
 - `doppler run -- make sql-values`
+- `doppler run -- make volume-create`
 
 確認済み結果:
 
@@ -43,6 +44,7 @@ doppler run -- make sql-values
 - `customers` / `orders` は SQL の `VALUES` で再現する仕様
 - `workspace.default.customers` と `workspace.default.orders` の作成を確認
 - JOIN 集計結果として `Taro Yamada / 2件 / 20000`、`Hanako Sato / 1件 / 15000`、`Ken Suzuki / 1件 / 6000` を確認
+- `workspace.default.raw_logs` の Managed Volume 作成を確認
 
 このため、この README の主導線は **確認済み仕様** として扱う。
 
@@ -60,7 +62,6 @@ doppler run -- make sql-values
 
 Free Edition での次段階候補として、以下を残す。
 
-- Managed Volume 作成
 - Files API で `/Volumes/...` へ upload
 - notebook / serverless compute で volume を読む
 - Delta Table 化
@@ -72,6 +73,8 @@ doppler run -- make volume-create
 doppler run -- make volume-upload \
   LOCAL_FILE=./data/events.json \
   VOLUME_PATH=/Volumes/workspace/default/raw_logs/sample.json
+doppler run -- make volume-verify
+doppler run -- make volume-clean
 ```
 
 Volume 作成と upload が通ったら、`01_volume_json_to_delta.py` を Databricks Workspace に取り込んで実行し、最後に `06_verify_events_from_volume.sql` で確認する。
